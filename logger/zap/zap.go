@@ -22,7 +22,7 @@ func New(config *logger.Config) (*Logger, error) {
 		err           error
 	)
 
-	if config.DebugLog {
+	if config.IsDevelopment {
 		configEncoder = zap.NewDevelopmentEncoderConfig()
 	}
 
@@ -92,6 +92,14 @@ func buildFields(field logger.Field, err error) []zap.Field {
 		zapFields = append(zapFields, zap.String(logger.FieldNameRequestID, field.RequestID))
 	}
 
+	if field.Source != nil {
+		zapFields = append(zapFields, zap.Any(logger.FieldNameSource, field.Source))
+	}
+
+	if field.UserInfo != nil {
+		zapFields = append(zapFields, zap.Any(logger.FieldNameUserInfo, field.UserInfo))
+	}
+
 	if err != nil {
 		zapFields = append(zapFields, zap.Error(err))
 	}
@@ -141,4 +149,8 @@ func (l *Logger) Warnf(field logger.Field, err error, format string, args ...int
 
 func (l *Logger) Errorf(field logger.Field, err error, format string, args ...interface{}) {
 	l.logger.Error(fmt.Sprintf(format, args...), buildFields(field, err)...)
+}
+
+func (l *Logger) Fatalf(field logger.Field, err error, format string, args ...interface{}) {
+	l.logger.Fatal(fmt.Sprintf(format, args...), buildFields(field, err)...)
 }
