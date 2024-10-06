@@ -33,15 +33,22 @@ func New(config *logger.Config) (*Logger, error) {
 		configEncoder.EncodeTime = zapcore.TimeEncoderOfLayout(config.TimeFormat)
 	}
 	configEncoder.CallerKey = "line"
-	callerSkipFrameCount := 4 + config.CallerSkip
+	callerSkipFrameCount := 2 + config.CallerSkip
 	configEncoder.StacktraceKey = "stack"
 	if !config.WithCaller {
 		configEncoder.CallerKey = zapcore.OmitKey
 	}
 
 	// set output log
-	zapEncoder := zapcore.NewConsoleEncoder(configEncoder)
+	zapEncoder := zapcore.NewJSONEncoder(configEncoder)
 	writer := zapcore.AddSync(os.Stderr)
+
+	if config.IsDevelopment {
+		zapEncoder = zapcore.NewConsoleEncoder(configEncoder)
+	}
+	if !config.UseJSON {
+		zapEncoder = zapcore.NewConsoleEncoder(configEncoder)
+	}
 
 	file, err := config.OpenLogFile()
 	if err != nil {
@@ -52,12 +59,17 @@ func New(config *logger.Config) (*Logger, error) {
 		writer = zapcore.AddSync(file)
 	}
 
+	initialFields := make([]zap.Field, 0)
+	if config.AppName != "" {
+		initialFields = append(initialFields, zap.String("appName", config.AppName))
+	}
+	if config.Environment != "" {
+		initialFields = append(initialFields, zap.String("environment", config.Environment))
+	}
+
 	zapCore := zapcore.NewCore(zapEncoder, writer, setLevel(config.Level))
 	zapLogger = zap.New(zapCore,
-		zap.Fields(
-			zap.String("app", config.AppName),
-			zap.String("env", config.Environment),
-		),
+		zap.Fields(initialFields...),
 		zap.WithCaller(config.WithCaller),
 		zap.AddCallerSkip(callerSkipFrameCount),
 	)

@@ -13,6 +13,7 @@ type Config struct {
 	TimeFormat  string
 	WithCaller  bool
 	CallerSkip  int
+	UseJSON     bool
 	FilePath    string
 	Engine      Engine
 }
@@ -27,15 +28,20 @@ func SetConfig(config *Config) error {
 	)
 
 	if config != nil {
+		isDevelopment := false
+		if config.Environment == "development" || config.Environment == "local" || config.Environment == "dev" {
+			isDevelopment = true
+		}
 		configLogger = logger.Config{
 			AppName:       config.AppName,
 			Environment:   config.Environment,
-			IsDevelopment: false,
+			IsDevelopment: isDevelopment,
 			File:          config.FilePath,
 			TimeFormat:    config.TimeFormat,
 			Level:         config.Level,
 			CallerSkip:    config.CallerSkip,
 			WithCaller:    config.WithCaller,
+			UseJSON:       config.UseJSON,
 		}
 		engineLogger = config.Engine
 	}
