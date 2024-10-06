@@ -12,8 +12,8 @@ type (
 	// Engine of logger
 	Engine string
 
-	// Logger interface
-	Logger interface {
+	// ILogger interface
+	ILogger interface {
 		Debug(field Field, err error, message string)
 		Debugf(field Field, err error, format string, args ...interface{})
 		Info(field Field, err error, message string)
@@ -37,18 +37,18 @@ const (
 )
 
 const (
-	Zap Engine = "zap"
+	EngineZap Engine = "zap"
 )
 
 type Config struct {
-	AppName     string
-	Environment string
-	File        string
-	TimeFormat  string
-	Level       Level
-	CallerSkip  int
-	WithCaller  bool
-	DebugLog    bool
+	AppName       string
+	Environment   string
+	IsDevelopment bool
+	File          string
+	TimeFormat    string
+	Level         Level
+	CallerSkip    int
+	WithCaller    bool
 }
 
 // OpenLogFile will open log file or generate it if not exist
