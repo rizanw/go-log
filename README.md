@@ -35,27 +35,27 @@ You can also customize configuration for your log very simple:
 package main
 
 import (
-  "context"
-  // import this log package
-  log "github.com/rizanw/go-log"
+	"context"
+	// import this log package
+	log "github.com/rizanw/go-log"
 )
 
 func main() {
-  var (
-    ctx = context.Background()
-    err error
-  )
+	var (
+		ctx = context.Background()
+		err error
+	)
 
-  // customize configuration like this
-  err = log.SetConfig(&log.Config{
-    AppName:     "go-app",
-    Environment: "development",
-    WithCaller:  true,
-  })
-  if err != nil {
-    // use the log like this
-    log.Errorf(ctx, err, nil, "we got error with message: %s", err.Error())
-  }
+	// customize configuration like this
+	err = log.SetConfig(&log.Config{
+		AppName:     "go-app",
+		Environment: "development",
+		WithCaller:  true,
+	})
+	if err != nil {
+		// use the log like this
+		log.Errorf(ctx, err, nil, "we got error with message: %s", err.Error())
+	}
 }
 
 ```
@@ -70,12 +70,12 @@ below is list of available configuration:
 |-------------|------------|-----------------------------------------------------------------------|
 | AppName     | string     | your application name                                                 |
 | Environment | string     | your application environment                                          |
-| Level       | string     | minimum log level to be printed (default: DEBUG)                      |
+| Level       | log.Level  | minimum log level to be printed (default: DEBUG)                      |
 | TimeFormat  | string     | desired time format (default: RFC3339)                                |
 | WithCaller  | bool       | caller toggle to print which line is calling the log (default: false) |
 | CallerSkip  | int        | which caller line wants to be print                                   |
 | FilePath    | string     | specify your output log files directories (default: no file)          |
-| Engine      | log.Engine | desired engine logger (default: zerolog)                              |                      
+| Engine      | log.Engine | desired engine logger (default: zap)                                  |                      
 
 ## Structured Log
 
