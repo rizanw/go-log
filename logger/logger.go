@@ -49,6 +49,7 @@ type Config struct {
 	Level         Level
 	CallerSkip    int
 	WithCaller    bool
+	UseJSON       bool
 }
 
 // OpenLogFile will open log file or generate it if not exist

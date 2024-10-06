@@ -13,6 +13,7 @@ type Config struct {
 	TimeFormat  string
 	WithCaller  bool
 	CallerSkip  int
+	UseJSON     bool
 	FilePath    string
 	Engine      Engine
 }
@@ -36,6 +37,7 @@ func SetConfig(config *Config) error {
 			Level:         config.Level,
 			CallerSkip:    config.CallerSkip,
 			WithCaller:    config.WithCaller,
+			UseJSON:       config.UseJSON,
 		}
 		engineLogger = config.Engine
 	}
