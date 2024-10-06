@@ -35,30 +35,27 @@ You can also customize configuration for your log very simple:
 package main
 
 import (
-	"context"
-	"time"
-
-	// import this log package
-	log "github.com/rizanw/go-log"
+  "context"
+  // import this log package
+  log "github.com/rizanw/go-log"
 )
 
 func main() {
-	var (
-		ctx = context.Background()
-		err error
-	)
+  var (
+    ctx = context.Background()
+    err error
+  )
 
-	// customize configuration like this
-	err = log.SetConfig(&log.Config{
-		AppName:     "go-app",
-		Environment: "development",
-		TimeFormat:  time.RFC3339,
-		Level:       log.LevelInfo,
-	})
-	if err != nil {
-		// use the log like this
-		log.Errorf(ctx, err, nil, "we got error with message: %s", err.Error())
-	}
+  // customize configuration like this
+  err = log.SetConfig(&log.Config{
+    AppName:     "go-app",
+    Environment: "development",
+    WithCaller:  true,
+  })
+  if err != nil {
+    // use the log like this
+    log.Errorf(ctx, err, nil, "we got error with message: %s", err.Error())
+  }
 }
 
 ```
@@ -69,14 +66,16 @@ Note: `SetConfig` func is not thread safe, so call it once when initializing the
 
 below is list of available configuration:
 
-| Key         | type       | Description                                                  |
-|-------------|------------|--------------------------------------------------------------|
-| AppName     | string     | your application name                                        |
-| Environment | string     | your application environment                                 |
-| Level       | string     | minimum log level to be printed (default: DEBUG)             |
-| TimeFormat  | string     | desired time format (default: RFC3339)                       |
-| File        | string     | specify your output log files directories (default: no file) |
-| Engine      | log.Engine | desired engine logger (default: zerolog)                     |                      
+| Key         | type       | Description                                                           |
+|-------------|------------|-----------------------------------------------------------------------|
+| AppName     | string     | your application name                                                 |
+| Environment | string     | your application environment                                          |
+| Level       | string     | minimum log level to be printed (default: DEBUG)                      |
+| TimeFormat  | string     | desired time format (default: RFC3339)                                |
+| WithCaller  | bool       | caller toggle to print which line is calling the log (default: false) |
+| CallerSkip  | int        | which caller line wants to be print                                   |
+| FilePath    | string     | specify your output log files directories (default: no file)          |
+| Engine      | log.Engine | desired engine logger (default: zerolog)                              |                      
 
 ## Structured Log
 
@@ -86,7 +85,6 @@ by implementing structured logging, we can easily filter and search logs based o
 {
   "level": "info",
   "timestamp": "2024-07-23T14:52:00Z",
-  "message": "[HTTP][Request]: POST /api/v1/login",
   "app": "golang-app",
   "env": "development",
   "request_id": "5825511e-196f-406b-baed-67a9da40a26a",
@@ -94,10 +92,11 @@ by implementing structured logging, we can easily filter and search logs based o
     "app": "ios",
     "version": "1.10.5"
   },
-  "fields": {
+  "metadata": {
     "username": "hello",
     "password": "***"
-  }
+  },
+  "message": "[HTTP][Request]: POST /api/v1/login"
 }
 ```
 
@@ -126,7 +125,7 @@ this package provide 5 hierarchical levels based on the severity:
 
 ### logging
 
-you can log based on the level and each level has 2 main functions:
+you can log based on the severity hierarchy and each severity has 2 main functions:
 
 - unformatted, similar to `Println` in `fmt` package
 
@@ -177,3 +176,7 @@ ctx = log.SetUserInfo(ctx, log.KV{"username": "hello"})
 // set source logging into context
 ctx = log.SetSource(ctx, log.KV{"app": source.App, "version": source.Version})
 ```
+
+### Additional Fields
+
+Need more fields? coming soon!
