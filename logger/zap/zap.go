@@ -1,7 +1,7 @@
 package zap
 
 import (
-	"context"
+	"fmt"
 	"os"
 
 	"github.com/rizanw/go-log/logger"
@@ -85,7 +85,7 @@ func setLevel(level logger.Level) zapcore.Level {
 	}
 }
 
-func buildFields(ctx context.Context, field logger.Field, err error) []zap.Field {
+func buildFields(field logger.Field, err error) []zap.Field {
 	zapFields := make([]zap.Field, 0)
 
 	if field.RequestID != "" {
@@ -107,6 +107,38 @@ func buildFields(ctx context.Context, field logger.Field, err error) []zap.Field
 	return zapFields
 }
 
-func (l *Logger) Debug(ctx context.Context, field logger.Field, err error, message string) {
-	l.logger.Debug(message, buildFields(ctx, field, err)...)
+func (l *Logger) Debug(field logger.Field, err error, message string) {
+	l.logger.Debug(message, buildFields(field, err)...)
+}
+
+func (l *Logger) Info(field logger.Field, err error, message string) {
+	l.logger.Info(message, buildFields(field, err)...)
+}
+
+func (l *Logger) Warn(field logger.Field, err error, message string) {
+	l.logger.Warn(message, buildFields(field, err)...)
+}
+
+func (l *Logger) Error(field logger.Field, err error, message string) {
+	l.logger.Error(message, buildFields(field, err)...)
+}
+
+func (l *Logger) Fatal(field logger.Field, err error, message string) {
+	l.logger.Fatal(message, buildFields(field, err)...)
+}
+
+func (l *Logger) Debugf(field logger.Field, err error, format string, args ...interface{}) {
+	l.logger.Debug(fmt.Sprintf(format, args...), buildFields(field, err)...)
+}
+
+func (l *Logger) Infof(field logger.Field, err error, format string, args ...interface{}) {
+	l.logger.Info(fmt.Sprintf(format, args...), buildFields(field, err)...)
+}
+
+func (l *Logger) Warnf(field logger.Field, err error, format string, args ...interface{}) {
+	l.logger.Warn(fmt.Sprintf(format, args...), buildFields(field, err)...)
+}
+
+func (l *Logger) Errorf(field logger.Field, err error, format string, args ...interface{}) {
+	l.logger.Error(fmt.Sprintf(format, args...), buildFields(field, err)...)
 }

@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 )
@@ -15,16 +14,16 @@ type (
 
 	// Logger interface
 	Logger interface {
-		Debug(ctx context.Context, field Field, err error, message string)
-		Debugf(requestID string, err error, fields interface{}, format string, args ...interface{})
-		Info(ctx context.Context, field Field, err error, message string)
-		Infof(requestID string, err error, fields interface{}, format string, args ...interface{})
-		Warn(ctx context.Context, field Field, err error, message string)
-		Warnf(requestID string, err error, fields interface{}, format string, args ...interface{})
-		Error(ctx context.Context, field Field, err error, message string)
-		Errorf(requestID string, err error, fields interface{}, format string, args ...interface{})
-		Fatal(ctx context.Context, field Field, err error, message string)
-		Fatalf(requestID string, err error, fields interface{}, format string, args ...interface{})
+		Debug(field Field, err error, message string)
+		Debugf(field Field, err error, format string, args ...interface{})
+		Info(field Field, err error, message string)
+		Infof(field Field, err error, format string, args ...interface{})
+		Warn(field Field, err error, message string)
+		Warnf(field Field, err error, format string, args ...interface{})
+		Error(field Field, err error, message string)
+		Errorf(field Field, err error, format string, args ...interface{})
+		Fatal(field Field, err error, message string)
+		Fatalf(field Field, err error, format string, args ...interface{})
 	}
 )
 
