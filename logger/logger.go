@@ -37,7 +37,8 @@ const (
 )
 
 const (
-	EngineZap Engine = "zap"
+	EngineZap     Engine = "zap"
+	EngineZerolog Engine = "zerolog"
 )
 
 type Config struct {
@@ -50,6 +51,7 @@ type Config struct {
 	CallerSkip    int
 	WithCaller    bool
 	UseJSON       bool
+	UseColor      bool
 }
 
 // OpenLogFile will open log file or generate it if not exist

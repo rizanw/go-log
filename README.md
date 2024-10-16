@@ -74,8 +74,20 @@ below is list of available configuration:
 | TimeFormat  | string     | desired time format (default: RFC3339)                                |
 | WithCaller  | bool       | caller toggle to print which line is calling the log (default: false) |
 | CallerSkip  | int        | which caller line wants to be print                                   |
+| UseJSON     | bool       | a toggle to format log as json (default: false)                       |
+| UseColor    | bool       | a toggle to colorize your log console with zerolog                    |
 | FilePath    | string     | specify your output log files directories (default: no file)          |
-| Engine      | log.Engine | desired engine logger (default: zap)                                  |                      
+| Engine      | log.Engine | desired engine logger (default: zerolog)                              |                      
+
+#### Engine Options
+
+This pkg currently provides two engine (aka logger) to use:
+
+- [Zerolog](https://github.com/rs/zerolog)
+- [Zap](https://github.com/uber-go/zap)
+
+if you confused to decide, you can
+read [this article](https://betterstack.com/community/guides/logging/best-golang-logging-libraries/) as reference.
 
 ## Structured Log
 

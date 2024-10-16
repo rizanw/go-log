@@ -6,16 +6,42 @@ import (
 	"github.com/rizanw/go-log/logger"
 )
 
+// Config for Log configuration
 type Config struct {
-	AppName     string
+	// AppName is your application name
+	// it will be printed as `app` in log
+	AppName string
+
+	// Environment is your application environment running on
+	// it will be printed as `env` in log
+	// `dev` | `development` | `local` will mark your app under development env
 	Environment string
-	Level       Level
-	TimeFormat  string
-	WithCaller  bool
-	CallerSkip  int
-	UseJSON     bool
-	FilePath    string
-	Engine      Engine
+
+	// Level is minimum log level to be printed (default: DEBUG)
+	Level Level
+
+	// TimeFormat is for log time format (default: RFC3339)
+	TimeFormat string
+
+	// WithCaller toggle to print which line is calling the log (default: false)
+	WithCaller bool
+
+	// CallerSkip is offset number for which caller line you wants to be print (default: 0)
+	CallerSkip int
+
+	// UseJSON is a toggle to format log as json (default: false)
+	UseJSON bool
+
+	// UseColor is a toggle to colorize your log console
+	// note: it only works using `zerolog` engine and under `development` environment
+	UseColor bool
+
+	// FilePath a file path to write the log as a file
+	// note: if you fill the file path, your console log will be empty.
+	FilePath string
+
+	// Engine is logger to be used
+	Engine Engine
 }
 
 // SetConfig is function to customize log configuration
@@ -42,6 +68,7 @@ func SetConfig(config *Config) error {
 			CallerSkip:    config.CallerSkip,
 			WithCaller:    config.WithCaller,
 			UseJSON:       config.UseJSON,
+			UseColor:      config.UseColor,
 		}
 		engineLogger = config.Engine
 	}
