@@ -3,6 +3,7 @@ package log
 import (
 	"github.com/rizanw/go-log/logger"
 	"github.com/rizanw/go-log/logger/zap"
+	"github.com/rizanw/go-log/logger/zerolog"
 )
 
 type (
@@ -27,11 +28,12 @@ const (
 
 // Engine options
 const (
-	Zap Engine = logger.EngineZap
+	Zap     Engine = logger.EngineZap
+	Zerolog Engine = logger.EngineZerolog
 )
 
 var (
-	rlogger, _ = NewLogger(logger.Config{IsDevelopment: true}, logger.EngineZap)
+	rlogger, _ = NewLogger(logger.Config{IsDevelopment: true}, logger.EngineZerolog)
 )
 
 // NewLogger creates a logger instance based on selected logger engine
@@ -42,10 +44,12 @@ func NewLogger(config logger.Config, engine logger.Engine) (Logger, error) {
 	)
 
 	switch engine {
+	case logger.EngineZerolog:
+		l, err = zerolog.New(&config)
 	case logger.EngineZap:
 		l, err = zap.New(&config)
 	default:
-		l, err = zap.New(&config)
+		l, err = zerolog.New(&config)
 	}
 	if err != nil {
 		return nil, err

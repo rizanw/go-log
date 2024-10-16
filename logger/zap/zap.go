@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Logger struct
 type Logger struct {
 	logger *zap.Logger
 	config *logger.Config
@@ -61,10 +60,10 @@ func New(config *logger.Config) (*Logger, error) {
 
 	initialFields := make([]zap.Field, 0)
 	if config.AppName != "" {
-		initialFields = append(initialFields, zap.String("appName", config.AppName))
+		initialFields = append(initialFields, zap.String("app", config.AppName))
 	}
 	if config.Environment != "" {
-		initialFields = append(initialFields, zap.String("environment", config.Environment))
+		initialFields = append(initialFields, zap.String("env", config.Environment))
 	}
 
 	zapCore := zapcore.NewCore(zapEncoder, writer, setLevel(config.Level))
