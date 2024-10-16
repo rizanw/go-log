@@ -5,7 +5,11 @@ It is designed to be simple and easy to use.
 
 ## Quick Start
 
-You can drop this package in to replace your log very simply:
+```bash
+go get -u github.com/rizanw/go-log
+```
+
+And you can drop this package in to replace your log very simply:
 
 ```go
 package main
