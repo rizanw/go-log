@@ -21,19 +21,17 @@ func New(config *logger.Config) (*Logger, error) {
 		err           error
 	)
 
-	if config.IsDevelopment {
-		configEncoder = zap.NewDevelopmentEncoderConfig()
-	}
-
 	// set zap config
+	configEncoder.MessageKey = "message"
+	configEncoder.LevelKey = "level"
 	configEncoder.TimeKey = "timestamp"
 	configEncoder.EncodeTime = zapcore.RFC3339TimeEncoder
 	if config.TimeFormat != "" {
 		configEncoder.EncodeTime = zapcore.TimeEncoderOfLayout(config.TimeFormat)
 	}
+	configEncoder.StacktraceKey = "stacktrace"
 	configEncoder.CallerKey = "line"
 	callerSkipFrameCount := 2 + config.CallerSkip
-	configEncoder.StacktraceKey = "stack"
 	if !config.WithCaller {
 		configEncoder.CallerKey = zapcore.OmitKey
 	}
@@ -67,12 +65,26 @@ func New(config *logger.Config) (*Logger, error) {
 	}
 
 	zapCore := zapcore.NewCore(zapEncoder, writer, setLevel(config.Level))
+	if config.UseMultiWriters {
+		zapCore = zapcore.NewTee(
+			zapcore.NewCore(zapEncoder, zapcore.Lock(file), setLevel(config.Level)),
+			zapcore.NewCore(zapEncoder, zapcore.Lock(os.Stdout), setLevel(config.Level)),
+		)
+	}
+
 	zapLogger = zap.New(zapCore,
 		zap.Fields(initialFields...),
-		zap.WithCaller(config.WithCaller),
-		zap.AddCallerSkip(callerSkipFrameCount),
 	)
 
+	if config.WithCaller {
+		zapLogger = zapLogger.WithOptions(zap.AddCaller(), zap.AddCallerSkip(callerSkipFrameCount))
+	}
+
+	if config.WithStack {
+		zapLogger = zapLogger.WithOptions(zap.AddStacktrace(setLevel(config.StackLevel)))
+	}
+
+	defer zapLogger.Sync()
 	return &Logger{
 		logger: zapLogger,
 		config: config,

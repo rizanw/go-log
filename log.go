@@ -29,12 +29,25 @@ type Config struct {
 	// CallerSkip is offset number for which caller line you wants to be print (default: 0)
 	CallerSkip int
 
+	// WithStack is a toggle to print which stack trace error located (default: false)
+	WithStack bool
+
+	// StackLevel is minimum log level for zap stack trace (default: ERROR)
+	StackLevel *Level
+
+	// StackMarshaller, function to get and log the stack trace for zerolog (default: `zerolog/pkgerrors`)
+	StackMarshaller func(err error) interface{}
+
 	// UseJSON is a toggle to format log as json (default: false)
 	UseJSON bool
 
 	// UseColor is a toggle to colorize your log console
 	// note: it only works using `zerolog` engine and under `development` environment
 	UseColor bool
+
+	// UseMultiWriters is a toggle to print log into log file and log console
+	// note: FilePath must be filled
+	UseMultiWriters bool
 
 	// FilePath a file path to write the log as a file
 	// note: if you fill the file path, your console log will be empty.
@@ -58,17 +71,27 @@ func SetConfig(config *Config) error {
 		if config.Environment == "development" || config.Environment == "local" || config.Environment == "dev" {
 			isDevelopment = true
 		}
+
+		errStackLevel := ErrorLevel
+		if config.StackLevel != nil {
+			errStackLevel = *config.StackLevel
+		}
+
 		configLogger = logger.Config{
-			AppName:       config.AppName,
-			Environment:   config.Environment,
-			IsDevelopment: isDevelopment,
-			File:          config.FilePath,
-			TimeFormat:    config.TimeFormat,
-			Level:         config.Level,
-			CallerSkip:    config.CallerSkip,
-			WithCaller:    config.WithCaller,
-			UseJSON:       config.UseJSON,
-			UseColor:      config.UseColor,
+			AppName:         config.AppName,
+			Environment:     config.Environment,
+			IsDevelopment:   isDevelopment,
+			TimeFormat:      config.TimeFormat,
+			Level:           config.Level,
+			WithCaller:      config.WithCaller,
+			CallerSkip:      config.CallerSkip,
+			WithStack:       config.WithStack,
+			StackLevel:      errStackLevel,
+			StackMarshaller: config.StackMarshaller,
+			UseJSON:         config.UseJSON,
+			UseColor:        config.UseColor,
+			UseMultiWriters: config.UseMultiWriters,
+			File:            config.FilePath,
 		}
 		engineLogger = config.Engine
 	}

@@ -70,18 +70,27 @@ Note: `SetConfig` func is not thread safe, so call it once when initializing the
 
 below is list of available configuration:
 
-| Key         | type       | Description                                                           |
-|-------------|------------|-----------------------------------------------------------------------|
-| AppName     | string     | your application name                                                 |
-| Environment | string     | your application environment                                          |
-| Level       | log.Level  | minimum log level to be printed (default: DEBUG)                      |
-| TimeFormat  | string     | desired time format (default: RFC3339)                                |
-| WithCaller  | bool       | caller toggle to print which line is calling the log (default: false) |
-| CallerSkip  | int        | which caller line wants to be print                                   |
-| UseJSON     | bool       | a toggle to format log as json (default: false)                       |
-| UseColor    | bool       | a toggle to colorize your log console with zerolog                    |
-| FilePath    | string     | specify your output log files directories (default: no file)          |
-| Engine      | log.Engine | desired engine logger (default: zerolog)                              |                      
+| Key             | type                        | Description                                                                        |
+|-----------------|-----------------------------|------------------------------------------------------------------------------------|
+| AppName         | string                      | your application name                                                              |
+| Environment     | string                      | your application environment                                                       |
+| Level           | log.Level                   | minimum log level to be printed (default: DEBUG)                                   |
+| TimeFormat      | string                      | desired time format (default: RFC3339)                                             |
+| WithCaller      | bool                        | caller toggle to print which line is calling the log (default: false)              |
+| CallerSkip      | int                         | which caller line wants to be print                                                |
+| WithStack       | bool                        | toggle to print which stack trace error located (default: false)                   |
+| StackLevel      | log.Level                   | minimum log level for zap stack trace (default: ERROR)                             |
+| StackMarshaller | func(err error) interface{} | function to get and log the stack trace for zerolog (default: `zerolog/pkgerrors`) |
+| UseMultiWriters | bool                        | a toggle to print log into log file and log console (FilePath required)            |
+| FilePath        | string                      | specify your output log files directories (default: no file)                       |
+| UseJSON         | bool                        | a toggle to format log as json (default: false)                                    |
+| UseColor        | bool                        | a toggle to colorize your log console with zerolog                                 |
+| Engine          | log.Engine                  | desired engine logger (default: zerolog)                                           |                      
+
+note:
+
+- Keep in mind that taking a caller or stacktrace is eager and expensive (relatively speaking) and makes an additional
+  allocation.
 
 #### Engine Options
 

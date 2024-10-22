@@ -31,8 +31,13 @@ func New(config *logger.Config) (*Logger, error) {
 	zerolog.TimeFieldFormat = timeFormat
 	zerolog.CallerFieldName = "line"
 	callerSkipFrameCount := 4 + config.CallerSkip
-	zerolog.ErrorStackFieldName = "stack"
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	zerolog.ErrorStackFieldName = "stacktrace"
+	if config.WithStack {
+		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+		if config.StackMarshaller != nil {
+			zerolog.ErrorStackMarshaler = config.StackMarshaller
+		}
+	}
 
 	// set output log
 	writer = os.Stderr
@@ -60,6 +65,10 @@ func New(config *logger.Config) (*Logger, error) {
 
 	if config.IsDevelopment {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	if config.UseMultiWriters {
+		writer = zerolog.MultiLevelWriter(file, os.Stdout)
 	}
 
 	zeroLogger = zerolog.New(writer).With().Timestamp().Logger().Level(setLevel(config.Level))
@@ -121,41 +130,41 @@ func buildFields(field logger.Field) map[string]interface{} {
 }
 
 func (l *Logger) Debug(field logger.Field, err error, message string) {
-	l.logger.Debug().Fields(buildFields(field)).Err(err).Msg(message)
+	l.logger.Debug().Fields(buildFields(field)).Stack().Err(err).Msg(message)
 }
 
 func (l *Logger) Info(field logger.Field, err error, message string) {
-	l.logger.Info().Fields(buildFields(field)).Err(err).Msg(message)
+	l.logger.Info().Fields(buildFields(field)).Stack().Err(err).Msg(message)
 }
 
 func (l *Logger) Warn(field logger.Field, err error, message string) {
-	l.logger.Warn().Fields(buildFields(field)).Err(err).Msg(message)
+	l.logger.Warn().Fields(buildFields(field)).Stack().Err(err).Msg(message)
 }
 
 func (l *Logger) Error(field logger.Field, err error, message string) {
-	l.logger.Error().Fields(buildFields(field)).Err(err).Msg(message)
+	l.logger.Error().Fields(buildFields(field)).Stack().Err(err).Msg(message)
 }
 
 func (l *Logger) Fatal(field logger.Field, err error, message string) {
-	l.logger.Fatal().Fields(buildFields(field)).Err(err).Msg(message)
+	l.logger.Fatal().Fields(buildFields(field)).Stack().Err(err).Msg(message)
 }
 
 func (l *Logger) Debugf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Debug().Fields(buildFields(field)).Err(err).Msgf(format, args...)
+	l.logger.Debug().Fields(buildFields(field)).Stack().Err(err).Msgf(format, args...)
 }
 
 func (l *Logger) Infof(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Info().Fields(buildFields(field)).Err(err).Msgf(format, args...)
+	l.logger.Info().Fields(buildFields(field)).Stack().Err(err).Msgf(format, args...)
 }
 
 func (l *Logger) Warnf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Warn().Fields(buildFields(field)).Err(err).Msgf(format, args...)
+	l.logger.Warn().Fields(buildFields(field)).Stack().Err(err).Msgf(format, args...)
 }
 
 func (l *Logger) Errorf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Error().Fields(buildFields(field)).Err(err).Msgf(format, args...)
+	l.logger.Error().Fields(buildFields(field)).Stack().Err(err).Msgf(format, args...)
 }
 
 func (l *Logger) Fatalf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Fatal().Fields(buildFields(field)).Err(err).Msgf(format, args...)
+	l.logger.Fatal().Fields(buildFields(field)).Stack().Err(err).Msgf(format, args...)
 }

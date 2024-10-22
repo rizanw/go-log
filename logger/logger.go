@@ -42,16 +42,20 @@ const (
 )
 
 type Config struct {
-	AppName       string
-	Environment   string
-	IsDevelopment bool
-	File          string
-	TimeFormat    string
-	Level         Level
-	CallerSkip    int
-	WithCaller    bool
-	UseJSON       bool
-	UseColor      bool
+	AppName         string
+	Environment     string
+	IsDevelopment   bool
+	TimeFormat      string
+	Level           Level
+	WithCaller      bool
+	CallerSkip      int
+	WithStack       bool
+	StackLevel      Level
+	StackMarshaller func(err error) interface{}
+	UseJSON         bool
+	UseColor        bool
+	UseMultiWriters bool
+	File            string
 }
 
 // OpenLogFile will open log file or generate it if not exist
