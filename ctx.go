@@ -13,9 +13,9 @@ const (
 )
 
 // SetCtxRequestID generates & sets request_id to context
-func SetCtxRequestID(ctx context.Context, requestID string) context.Context {
-	if requestID != "" {
-		return context.WithValue(ctx, KeyCtxRequestID, requestID)
+func SetCtxRequestID(ctx context.Context, requestID ...string) context.Context {
+	if len(requestID) == 1 {
+		return context.WithValue(ctx, KeyCtxRequestID, requestID[0])
 	}
 
 	return context.WithValue(ctx, KeyCtxRequestID, "gen-"+uuid.New().String())
