@@ -108,7 +108,7 @@ func setLevel(level logger.Level) zapcore.Level {
 	}
 }
 
-func buildFields(field logger.Field, err error) []zap.Field {
+func buildFields(cfg *logger.Config, field logger.Field, err error) []zap.Field {
 	zapFields := make([]zap.Field, 0)
 
 	if field.RequestID != "" {
@@ -120,60 +120,74 @@ func buildFields(field logger.Field, err error) []zap.Field {
 	}
 
 	if field.UserInfo != nil {
-		zapFields = append(zapFields, zap.Any(logger.FieldNameUserInfo, field.UserInfo))
+		userInfo := field.UserInfo
+		if len(cfg.SensitiveFields) > 0 {
+			if ui, ok := userInfo.(map[string]interface{}); ok {
+				cfg.MaskSensitiveData(ui)
+				userInfo = ui
+			}
+		}
+		zapFields = append(zapFields, zap.Any(logger.FieldNameUserInfo, userInfo))
 	}
 
 	if err != nil {
 		zapFields = append(zapFields, zap.Error(err))
 	}
 
+	if len(cfg.SensitiveFields) > 0 {
+		cfg.MaskSensitiveData(field.Fields)
+	}
 	for key, value := range field.Fields {
 		zapFields = append(zapFields, zap.Any(key, value))
 	}
 
 	if len(field.Metadata) > 0 {
-		zapFields = append(zapFields, zap.Any(logger.FieldNameMetadata, field.Metadata))
+		metadata := field.Metadata
+		if len(cfg.SensitiveFields) > 0 {
+			cfg.MaskSensitiveData(metadata)
+		}
+		zapFields = append(zapFields, zap.Any(logger.FieldNameMetadata, metadata))
 	}
 
 	return zapFields
 }
 
 func (l *Logger) Debug(field logger.Field, err error, message string) {
-	l.logger.Debug(message, buildFields(field, err)...)
+	l.logger.Debug(message, buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Info(field logger.Field, err error, message string) {
-	l.logger.Info(message, buildFields(field, err)...)
+	l.logger.Info(message, buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Warn(field logger.Field, err error, message string) {
-	l.logger.Warn(message, buildFields(field, err)...)
+	l.logger.Warn(message, buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Error(field logger.Field, err error, message string) {
-	l.logger.Error(message, buildFields(field, err)...)
+	l.logger.Error(message, buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Fatal(field logger.Field, err error, message string) {
-	l.logger.Fatal(message, buildFields(field, err)...)
+	l.logger.Fatal(message, buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Debugf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Debug(fmt.Sprintf(format, args...), buildFields(field, err)...)
+	l.logger.Debug(fmt.Sprintf(format, args...), buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Infof(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Info(fmt.Sprintf(format, args...), buildFields(field, err)...)
+	l.logger.Info(fmt.Sprintf(format, args...), buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Warnf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Warn(fmt.Sprintf(format, args...), buildFields(field, err)...)
+	l.logger.Warn(fmt.Sprintf(format, args...), buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Errorf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Error(fmt.Sprintf(format, args...), buildFields(field, err)...)
+	l.logger.Error(fmt.Sprintf(format, args...), buildFields(l.config, field, err)...)
 }
 
 func (l *Logger) Fatalf(field logger.Field, err error, format string, args ...interface{}) {
-	l.logger.Fatal(fmt.Sprintf(format, args...), buildFields(field, err)...)
+	l.logger.Fatal(fmt.Sprintf(format, args...), buildFields(l.config, field, err)...)
 }
