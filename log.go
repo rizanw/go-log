@@ -38,6 +38,12 @@ type Config struct {
 	// StackMarshaller, function to get and log the stack trace for zerolog (default: `zerolog/pkgerrors`)
 	StackMarshaller func(err error) interface{}
 
+	// MaskSensitiveData is keys of field to be masked
+	MaskSensitiveData []string
+
+	// SensitiveDataMasker, function to modify sensitive value into something (default: `*****`)
+	SensitiveDataMasker func(value string) string
+
 	// UseJSON is a toggle to format log as json (default: false)
 	UseJSON bool
 
@@ -77,21 +83,28 @@ func SetConfig(config *Config) error {
 			errStackLevel = *config.StackLevel
 		}
 
+		maskSensitiveData := make(map[string]struct{})
+		for _, key := range config.MaskSensitiveData {
+			maskSensitiveData[key] = struct{}{}
+		}
+
 		configLogger = logger.Config{
-			AppName:         config.AppName,
-			Environment:     config.Environment,
-			IsDevelopment:   isDevelopment,
-			TimeFormat:      config.TimeFormat,
-			Level:           config.Level,
-			WithCaller:      config.WithCaller,
-			CallerSkip:      config.CallerSkip,
-			WithStack:       config.WithStack,
-			StackLevel:      errStackLevel,
-			StackMarshaller: config.StackMarshaller,
-			UseJSON:         config.UseJSON,
-			UseColor:        config.UseColor,
-			UseMultiWriters: config.UseMultiWriters,
-			File:            config.FilePath,
+			AppName:              config.AppName,
+			Environment:          config.Environment,
+			IsDevelopment:        isDevelopment,
+			TimeFormat:           config.TimeFormat,
+			Level:                config.Level,
+			WithCaller:           config.WithCaller,
+			CallerSkip:           config.CallerSkip,
+			WithStack:            config.WithStack,
+			StackLevel:           errStackLevel,
+			StackMarshaller:      config.StackMarshaller,
+			UseJSON:              config.UseJSON,
+			UseColor:             config.UseColor,
+			SensitiveFields:      maskSensitiveData,
+			SensitiveFieldMasker: config.SensitiveDataMasker,
+			UseMultiWriters:      config.UseMultiWriters,
+			File:                 config.FilePath,
 		}
 		engineLogger = config.Engine
 	}

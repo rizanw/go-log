@@ -22,7 +22,8 @@ func main() {
 
 	// example log with data
 	req := map[string]interface{}{
-		"input": []string{"value-1", "value-2"},
+		"input":    []string{"value-1", "value-2"},
+		"password": "secret",
 	}
 	res := map[string]interface{}{
 		"output": "value",
@@ -43,13 +44,14 @@ func logWithoutConfig(ctx context.Context) {
 // note: do once when starting your app
 func setConfig() {
 	err := log.SetConfig(&log.Config{
-		AppName:         "go-app",
-		Environment:     "local",
-		WithCaller:      true,
-		WithStack:       true,
-		UseJSON:         true,
-		UseMultiWriters: true,
-		FilePath:        "/Users/rizanw/go/src/github.com/rizanw/go-log/example/file.log",
+		AppName:           "go-app",
+		Environment:       "local",
+		WithCaller:        true,
+		WithStack:         true,
+		UseJSON:           true,
+		UseMultiWriters:   true,
+		MaskSensitiveData: []string{"password"},
+		FilePath:          "/Users/rizanw/go/src/github.com/rizanw/go-log/example/file.log",
 	})
 	if err != nil {
 		log.Fatal(context.TODO(), err, nil, "failed: set log config")
