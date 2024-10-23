@@ -120,6 +120,13 @@ func buildFields(cfg *logger.Config, field logger.Field, err error) []zap.Field 
 	}
 
 	if field.UserInfo != nil {
+		if len(cfg.SensitiveFields) > 0 {
+			switch userInfo := field.UserInfo.(type) {
+			case map[string]interface{}:
+				cfg.MaskSensitiveData(userInfo)
+				field.UserInfo = userInfo
+			}
+		}
 		zapFields = append(zapFields, zap.Any(logger.FieldNameUserInfo, field.UserInfo))
 	}
 
@@ -127,6 +134,9 @@ func buildFields(cfg *logger.Config, field logger.Field, err error) []zap.Field 
 		zapFields = append(zapFields, zap.Error(err))
 	}
 
+	if len(cfg.SensitiveFields) > 0 {
+		cfg.MaskSensitiveData(field.Fields)
+	}
 	for key, value := range field.Fields {
 		zapFields = append(zapFields, zap.Any(key, value))
 	}

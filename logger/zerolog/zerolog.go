@@ -117,9 +117,19 @@ func buildFields(config *logger.Config, field logger.Field) map[string]interface
 	}
 
 	if field.UserInfo != nil {
-		mapFields[logger.FieldNameUserInfo] = field.UserInfo
+		userInfo := field.UserInfo
+		if len(config.SensitiveFields) > 0 {
+			switch ui := userInfo.(type) {
+			case map[string]interface{}:
+				config.MaskSensitiveData(ui)
+			}
+		}
+		mapFields[logger.FieldNameUserInfo] = userInfo
 	}
 
+	if len(config.SensitiveFields) > 0 {
+		config.MaskSensitiveData(field.Fields)
+	}
 	for key, value := range field.Fields {
 		mapFields[key] = value
 	}

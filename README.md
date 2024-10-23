@@ -121,7 +121,7 @@ by implementing structured logging, we can easily filter and search logs based o
   },
   "metadata": {
     "username": "hello",
-    "password": "***"
+    "password": "*****"
   },
   "message": "[HTTP][Request]: POST /api/v1/login"
 }
