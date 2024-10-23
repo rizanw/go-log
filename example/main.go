@@ -70,6 +70,7 @@ func logError(ctx context.Context, err error) {
 func logWithData(ctx context.Context, req interface{}, res interface{}) {
 	// example adding request_id
 	ctx = log.SetCtxRequestID(ctx)
+	ctx = log.SetCtxUserInfo(ctx, log.KV{"username": "user123", "password": "secret-user"})
 
 	// {"level":"info","app":"go-app","env":"local","metadata":{"request":{"input":["value-1","value-2"]},"response":{"output":"value"}},"request_id":"gen-ceff830d-4bcb-4dbd-9c51-50e38f57f34d","timestamp":"2024-10-22T19:10:19+07:00","caller
 	//":"~/go/src/github.com/rizanw/go-log/example/main.go:69","message":"sample log with data"}

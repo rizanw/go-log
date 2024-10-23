@@ -14,7 +14,14 @@ func buildFields(ctx context.Context, metadata KV) logger.Field {
 	if ctx != nil {
 		fields.RequestID = GetCtxRequestID(ctx)
 		fields.Source = GetCtxSource(ctx)
-		fields.UserInfo = GetCtxUserInfo(ctx)
+
+		userInfo := GetCtxUserInfo(ctx)
+		if ui, ok := userInfo.(KV); ok {
+			// assert alias into origin type
+			var m map[string]interface{} = ui
+			userInfo = m
+		}
+		fields.UserInfo = userInfo
 	}
 
 	if len(metadata) > 0 {
