@@ -1,6 +1,8 @@
 package log
 
 import (
+	"sync/atomic"
+
 	"github.com/rizanw/go-log/logger"
 	"github.com/rizanw/go-log/logger/zap"
 	"github.com/rizanw/go-log/logger/zerolog"
@@ -32,9 +34,19 @@ const (
 	Zerolog Engine = logger.EngineZerolog
 )
 
-var (
-	rlogger, _ = NewLogger(logger.Config{IsDevelopment: true}, logger.EngineZerolog)
-)
+// rlogger holds the active logger, swapped atomically by SetConfig.
+var rlogger atomic.Value // stores loggerHolder
+
+type loggerHolder struct{ Logger }
+
+func init() {
+	l, _ := NewLogger(logger.Config{IsDevelopment: true}, logger.EngineZerolog)
+	setLogger(l)
+}
+
+func setLogger(l Logger) { rlogger.Store(loggerHolder{l}) }
+
+func current() Logger { return rlogger.Load().(loggerHolder).Logger }
 
 // NewLogger creates a logger instance based on selected logger engine
 func NewLogger(config logger.Config, engine logger.Engine) (Logger, error) {

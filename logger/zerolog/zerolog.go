@@ -23,6 +23,10 @@ func New(config *logger.Config) (*Logger, error) {
 		timeFormat string = time.RFC3339
 	)
 
+	if err = config.Validate(); err != nil {
+		return nil, err
+	}
+
 	// set zerolog config
 	if config.TimeFormat != "" {
 		timeFormat = config.TimeFormat
@@ -117,28 +121,16 @@ func buildFields(config *logger.Config, field logger.Field) map[string]interface
 	}
 
 	if field.UserInfo != nil {
-		userInfo := field.UserInfo
-		if len(config.SensitiveFields) > 0 {
-			if ui, ok := userInfo.(map[string]interface{}); ok {
-				config.MaskSensitiveData(ui)
-				userInfo = ui
-			}
-		}
+		userInfo := config.Mask(field.UserInfo)
 		mapFields[logger.FieldNameUserInfo] = userInfo
 	}
 
-	if len(config.SensitiveFields) > 0 {
-		config.MaskSensitiveData(field.Fields)
-	}
-	for key, value := range field.Fields {
+	for key, value := range config.MaskSensitiveData(field.Fields) {
 		mapFields[key] = value
 	}
 
 	if len(field.Metadata) > 0 {
-		metadata := field.Metadata
-		if len(config.SensitiveFields) > 0 {
-			config.MaskSensitiveData(metadata)
-		}
+		metadata := config.MaskSensitiveData(field.Metadata)
 		mapFields[logger.FieldNameMetadata] = metadata
 	}
 

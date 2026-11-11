@@ -1,209 +1,163 @@
 # go-log
 
-go-log is a structured logging package to provides a simple way to log messages in different levels.
-It is designed to be simple and easy to use.
+[![Go Reference](https://pkg.go.dev/badge/github.com/rizanw/go-log.svg)](https://pkg.go.dev/github.com/rizanw/go-log)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Quick Start
-
-```bash
-go get -u github.com/rizanw/go-log
-```
-
-And you can drop this package in to replace your log very simply:
+A structured, leveled logging package for Go services. It wraps [zerolog](https://github.com/rs/zerolog) or [zap](https://github.com/uber-go/zap) behind one small API, adds request-scoped fields from `context.Context` (request ID, user, source), and masks sensitive values such as passwords and tokens before they reach your logs.
 
 ```go
-package main
-
-import (
-	"context"
-
-	// import this log package
-	log "github.com/rizanw/go-log"
-)
-
-func main() {
-	var (
-		appName = "go-app"
-	)
-
-	// use the log like this
-	log.Infof(context.TODO(), nil, log.KV{"key": "value"}, "starting app %s", appName)
-}
+log.Info(ctx, nil, log.KV{"order_id": 1042}, "order created")
 ```
-
-## Configurable Log
-
-You can also customize configuration for your log very simple:
-
-```go
-package main
-
-import (
-	"context"
-	// import this log package
-	log "github.com/rizanw/go-log"
-)
-
-func main() {
-	var (
-		ctx = context.Background()
-		err error
-	)
-
-	// customize configuration like this
-	err = log.SetConfig(&log.Config{
-		AppName:     "go-app",
-		Environment: "development",
-		WithCaller:  true,
-	})
-	if err != nil {
-		// use the log like this
-		log.Errorf(ctx, err, nil, "we got error with message: %s", err.Error())
-	}
-}
-
-```
-
-Note: `SetConfig` func is not thread safe, so call it once when initializing the app only.
-
-### Configuration
-
-below is list of available configuration:
-
-| Key                 | type                        | Description                                                                        |
-|---------------------|-----------------------------|------------------------------------------------------------------------------------|
-| AppName             | string                      | your application name                                                              |
-| Environment         | string                      | your application environment                                                       |
-| Level               | log.Level                   | minimum log level to be printed (default: DEBUG)                                   |
-| TimeFormat          | string                      | desired time format (default: RFC3339)                                             |
-| WithCaller          | bool                        | caller toggle to print which line is calling the log (default: false)              |
-| CallerSkip          | int                         | which caller line wants to be print                                                |
-| WithStack           | bool                        | toggle to print which stack trace error located (default: false)                   |
-| StackLevel          | log.Level                   | minimum log level for zap stack trace (default: ERROR)                             |
-| StackMarshaller     | func(err error) interface{} | function to get and log the stack trace for zerolog (default: `zerolog/pkgerrors`) |
-| UseMultiWriters     | bool                        | a toggle to print log into log file and log console (FilePath required)            |
-| FilePath            | string                      | specify your output log files directories (default: no file)                       |
-| MaskSensitiveData   | []string                    | keys of field to be masked                                                         |
-| SensitiveDataMasker | func(value string) string   | function to modify sensitive value into something (default: `*****`)               |
-| UseJSON             | bool                        | a toggle to format log as json (default: false)                                    |
-| UseColor            | bool                        | a toggle to colorize your log console with zerolog                                 |
-| Engine              | log.Engine                  | desired engine logger (default: zerolog)                                           |                      
-
-note:
-
-- Keep in mind that taking a caller or stacktrace is eager and expensive (relatively speaking) and makes an additional
-  allocation.
-
-#### Engine Options
-
-This pkg currently provides two engine (aka logger) to use:
-
-- [Zerolog](https://github.com/rs/zerolog)
-- [Zap](https://github.com/uber-go/zap)
-
-if you confused to decide, you can
-read [this article](https://betterstack.com/community/guides/logging/best-golang-logging-libraries/) as reference.
-
-## Structured Log
-
-by implementing structured logging, we can easily filter and search logs based on the key-value fields:
 
 ```json
-{
-  "level": "info",
-  "timestamp": "2024-07-23T14:52:00Z",
-  "app": "golang-app",
-  "env": "development",
-  "request_id": "5825511e-196f-406b-baed-67a9da40a26a",
-  "source": {
-    "app": "ios",
-    "version": "1.10.5"
-  },
-  "metadata": {
-    "username": "hello",
-    "password": "*****"
-  },
-  "message": "[HTTP][Request]: POST /api/v1/login"
+{"level":"info","app":"checkout","env":"production","request_id":"5825511e-196f-406b-baed-67a9da40a26a","metadata":{"order_id":1042},"timestamp":"2024-10-23T14:52:00Z","message":"order created"}
+```
+
+## Features
+
+- **Two engines, one API**: switch between zerolog (default) and zap with a config value
+- **Leveled logging**: `Debug`, `Info`, `Warn`, `Error`, `Fatal`, each with a `printf`-style variant
+- **Context fields**: request ID, user info, and source are read from `ctx` and added to every log line
+- **Sensitive data masking**: values under keys like `password` or `token` are masked at any depth, without modifying your data
+- **Output options**: console or JSON, optional colors, log file, or file and console together
+- **Caller and stack traces**: optional file:line and stack traces for errors
+
+## Installation
+
+```bash
+go get github.com/rizanw/go-log
+```
+
+Requires Go 1.20 or newer.
+
+## Quick start
+
+It works without any setup:
+
+```go
+import (
+    "context"
+
+    log "github.com/rizanw/go-log"
+)
+
+func main() {
+    log.Infof(context.Background(), nil, log.KV{"port": 8080}, "starting %s", "go-app")
 }
 ```
 
-## Hierarchical Log
-
-this package provide 5 hierarchical levels based on the severity:
-
-- **DEBUG** - this log level is used to obtain diagnostic information that can be helpful for troubleshooting and
-  debugging. These messages often contain verbose or fine-grained information about the inner workings of the system or
-  application. When teams look for log data to filter out for cost savings, they often start with DEBUG logs.
-- **INFO** - this log level provide general information about the status of the system. This log level is useful for
-  tracking an
-  application's progress or operational milestones. For example, your application may create INFO logs upon application
-  startup, when a user makes configuration changes, or when they successfully complete tasks.
-- **WARN** - this log level serves as a signal for potential issues that are not necessarily a critical error. For
-  example, your system may generate a WARN log when it is short on resources. If WARN logs go unaddressed, they may lead
-  to bigger issues in the future.
-- **ERROR** - this log level indicates significant problems that happened in the system. It usually denotes that an
-  unexpected event or exception has occurred. This log level is crucial for identifying issues affecting user experience
-  or overall functionality, so immediate attention is needed.
-- **FATAL** - this log level shows severe conditions that cause the system to terminate or operate in a significantly
-  degraded state. These logs are used for serious problems, like crashes or conditions that threaten data integrity or
-  application stability. FATAL logs often lead to service disruptions.
-
-## Usage
-
-### logging
-
-you can log based on the severity hierarchy and each severity has 2 main functions:
-
-- unformatted, similar to `Println` in `fmt` package
+For services, configure it once at startup:
 
 ```go
-// Debug
-log.Debug(ctx, err, log.KV{}, "this is a debug log")
-// Info
-log.Info(ctx, err, log.KV{}, "this is an info log")
-// Warn
-log.Warn(ctx, err, log.KV{}, "this is a warning log")
-// Error
-log.Error(ctx, err, log.KV{}, "this is an error log")
-// Fatal
-log.Fatal(ctx, err, log.KV{}, "this is a fatal log")
+err := log.SetConfig(&log.Config{
+    AppName:           "go-app",
+    Environment:       "production",
+    Level:             log.InfoLevel,
+    UseJSON:           true,
+    WithCaller:        true,
+    MaskSensitiveData: []string{"password", "token", "authorization"},
+})
+if err != nil {
+    log.Fatal(context.Background(), err, nil, "invalid log config")
+}
 ```
 
-- formatted, similar to `Printf` in `fmt` package
+Call `SetConfig` before logging from other goroutines. The zerolog engine applies some settings (such as time format) globally.
+
+## Logging
+
+Every function takes the same leading arguments:
 
 ```go
-// Debug
-log.Debugf(ctx, err, log.KV{}, "this is a debug log: %s", err.Error())
-// Info
-log.Infof(ctx, err, log.KV{}, "this is an info log: %s", err.Error())
-// Warn
-log.Warnf(ctx, err, log.KV{}, "this is a warning log: %s", err.Error())
-// Error
-log.Errorf(ctx, err, log.KV{}, "this is an error log: %s", err.Error())
-// Fatal
-log.Fatalf(ctx, err, log.KV{}, "this is a fatal log: %s", err.Error())
+log.Error(ctx, err, log.KV{"user_id": 42}, "failed to charge card")
+//        │    │    │                       └ message
+//        │    │    └ metadata: extra fields (nil if none)
+//        │    └ error to attach (nil if none)
+//        └ context carrying request-scoped fields
 ```
 
-### context
+| Level | Plain | Formatted | Use for |
+|---|---|---|---|
+| Debug | `log.Debug` | `log.Debugf` | detailed diagnostics while developing or troubleshooting |
+| Info | `log.Info` | `log.Infof` | normal milestones: startup, completed jobs, config changes |
+| Warn | `log.Warn` | `log.Warnf` | something unexpected that the app recovered from |
+| Error | `log.Error` | `log.Errorf` | a failed operation that needs attention |
+| Fatal | `log.Fatal` | `log.Fatalf` | an unrecoverable error; **logs and then exits the process** |
+
+Lines below the configured `Level` are dropped.
+
+## Context fields
+
+Set request-scoped values once, for example in HTTP middleware, and they appear on every log line that uses that context:
 
 ```go
-// set request_id (generated) logging into context
-ctx = log.SetRequestID(ctx)
+ctx = log.SetCtxRequestID(ctx)            // generates a request ID
+ctx = log.SetCtxRequestID(ctx, requestID) // or use your own, e.g. from an X-Request-ID header
+ctx = log.SetCtxUserInfo(ctx, log.KV{"user_id": 42, "role": "admin"})
+ctx = log.SetCtxSource(ctx, log.KV{"app": "ios", "version": "1.10.5"})
 
-// set request_id (by yours) logging into context
-ctx = log.SetRequestID(ctx, requestID)
+log.Info(ctx, nil, nil, "profile updated")
 ```
+
+```json
+{"level":"info","request_id":"gen-3f1c…","user_info":{"role":"admin","user_id":42},"source":{"app":"ios","version":"1.10.5"},"message":"profile updated"}
+```
+
+`GetCtxRequestID`, `GetCtxUserInfo`, and `GetCtxSource` read the values back, for example to forward the request ID to another service.
+
+## Masking sensitive data
+
+List the keys to mask in `MaskSensitiveData`. Matching is case-insensitive and works at any depth in metadata and user info, including nested maps and slices, and for values of any type:
 
 ```go
-// set user_info logging into context
-ctx = log.SetUserInfo(ctx, log.KV{"username": "hello"})
+log.SetConfig(&log.Config{UseJSON: true, MaskSensitiveData: []string{"password", "pin"}})
+
+req := log.KV{"username": "ann", "password": "hunter2", "card": log.KV{"PIN": 1234}}
+log.Info(ctx, nil, log.KV{"request": req}, "login attempt")
+// {"metadata":{"request":{"card":{"PIN":"****"},"password":"*******","username":"ann"}}, ...}
 ```
+
+The masked values are written to a copy, so `req` itself still holds the real password after logging. To change how values are masked, set `SensitiveDataMasker`:
 
 ```go
-// set source logging into context
-ctx = log.SetSource(ctx, log.KV{"app": source.App, "version": source.Version})
+SensitiveDataMasker: func(value string) string { return "[REDACTED]" },
 ```
 
-### Additional Fields
+## Configuration
 
-Need more fields? coming soon!
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `AppName` | `string` | | logged as `app` |
+| `Environment` | `string` | | logged as `env`; `dev`, `development`, or `local` enables development mode |
+| `Level` | `log.Level` | `DebugLevel` | minimum level to log |
+| `TimeFormat` | `string` | RFC 3339 | timestamp format |
+| `UseJSON` | `bool` | `false` | JSON output instead of human-readable console output |
+| `UseColor` | `bool` | `false` | colored console output (zerolog engine, development mode only) |
+| `WithCaller` | `bool` | `false` | add the `file:line` that logged the message |
+| `CallerSkip` | `int` | `0` | extra stack frames to skip, if you wrap this package |
+| `WithStack` | `bool` | `false` | add stack traces for errors |
+| `StackLevel` | `*log.Level` | `ErrorLevel` | minimum level for stack traces (zap engine) |
+| `StackMarshaller` | `func(error) interface{}` | `pkgerrors.MarshalStack` | how stack traces are extracted (zerolog engine) |
+| `MaskSensitiveData` | `[]string` | | keys whose values are masked |
+| `SensitiveDataMasker` | `func(string) string` | `*` per character | how masked values are rendered |
+| `FilePath` | `string` | | write logs to this file instead of the console (directories are created) |
+| `UseMultiWriters` | `bool` | `false` | write to both `FilePath` and stdout (requires `FilePath`) |
+| `Engine` | `log.Engine` | `log.Zerolog` | `log.Zerolog` or `log.Zap` |
+
+Capturing the caller or a stack trace costs extra allocations on every log call, so enable them where the information is worth it.
+
+### Choosing an engine
+
+Both are fast, structured, zero-allocation loggers, and the output is equivalent. zerolog is the default and has the nicer colored console output for local development. Pick zap if your codebase already uses it. For a comparison, see [Better Stack's guide to Go logging libraries](https://betterstack.com/community/guides/logging/best-golang-logging-libraries/).
+
+## Example
+
+[`example/main.go`](example/main.go) shows configuration, error logging with stack traces, context fields, masking, and file plus console output:
+
+```bash
+go run ./example
+```
+
+## License
+
+[MIT](LICENSE)
