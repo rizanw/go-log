@@ -51,7 +51,7 @@ func setConfig() {
 		UseJSON:           true,
 		UseMultiWriters:   true,
 		MaskSensitiveData: []string{"password"},
-		FilePath:          "/Users/rizanw/go/src/github.com/rizanw/go-log/example/file.log",
+		FilePath:          "logs/app.log",
 	})
 	if err != nil {
 		log.Fatal(context.TODO(), err, nil, "failed: set log config")

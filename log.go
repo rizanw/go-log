@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rizanw/go-log/logger"
 )
@@ -38,7 +39,7 @@ type Config struct {
 	// StackMarshaller, function to get and log the stack trace for zerolog (default: `zerolog/pkgerrors`)
 	StackMarshaller func(err error) interface{}
 
-	// MaskSensitiveData is keys of field to be masked
+	// MaskSensitiveData is keys of field to be masked (case-insensitive, at any depth)
 	MaskSensitiveData []string
 
 	// SensitiveDataMasker, function to modify sensitive value into something (default: `*****`)
@@ -63,7 +64,9 @@ type Config struct {
 	Engine Engine
 }
 
-// SetConfig is function to customize log configuration
+// SetConfig is function to customize log configuration.
+// Call it once at startup, before logging from other goroutines: the zerolog
+// engine applies some settings (time format, field names) globally.
 func SetConfig(config *Config) error {
 	var (
 		err          error
@@ -85,7 +88,7 @@ func SetConfig(config *Config) error {
 
 		maskSensitiveData := make(map[string]struct{})
 		for _, key := range config.MaskSensitiveData {
-			maskSensitiveData[key] = struct{}{}
+			maskSensitiveData[strings.ToLower(key)] = struct{}{}
 		}
 
 		configLogger = logger.Config{
@@ -113,56 +116,56 @@ func SetConfig(config *Config) error {
 	if err != nil {
 		return err
 	}
-	rlogger = newLogger
+	setLogger(newLogger)
 	return nil
 }
 
 // Debug prints log on debug level
 func Debug(ctx context.Context, err error, metadata KV, message string) {
-	rlogger.Debug(buildFields(ctx, metadata), err, message)
+	current().Debug(buildFields(ctx, metadata), err, message)
 }
 
 // Info prints log on info level
 func Info(ctx context.Context, err error, metadata KV, message string) {
-	rlogger.Info(buildFields(ctx, metadata), err, message)
+	current().Info(buildFields(ctx, metadata), err, message)
 }
 
 // Warn prints log on warn level
 func Warn(ctx context.Context, err error, metadata KV, message string) {
-	rlogger.Warn(buildFields(ctx, metadata), err, message)
+	current().Warn(buildFields(ctx, metadata), err, message)
 }
 
 // Error prints log on error level
 func Error(ctx context.Context, err error, metadata KV, message string) {
-	rlogger.Error(buildFields(ctx, metadata), err, message)
+	current().Error(buildFields(ctx, metadata), err, message)
 }
 
 // Fatal prints log on fatal level
 func Fatal(ctx context.Context, err error, metadata KV, message string) {
-	rlogger.Fatal(buildFields(ctx, metadata), err, message)
+	current().Fatal(buildFields(ctx, metadata), err, message)
 }
 
 // Debugf prints log on debug level like fmt.Printf
 func Debugf(ctx context.Context, err error, metadata KV, formatedMsg string, args ...interface{}) {
-	rlogger.Debugf(buildFields(ctx, metadata), err, formatedMsg, args...)
+	current().Debugf(buildFields(ctx, metadata), err, formatedMsg, args...)
 }
 
 // Infof prints log on info level like fmt.Printf
 func Infof(ctx context.Context, err error, metadata KV, formatedMsg string, args ...interface{}) {
-	rlogger.Infof(buildFields(ctx, metadata), err, formatedMsg, args...)
+	current().Infof(buildFields(ctx, metadata), err, formatedMsg, args...)
 }
 
 // Warnf prints log on warn level like fmt.Printf
 func Warnf(ctx context.Context, err error, metadata KV, formatedMsg string, args ...interface{}) {
-	rlogger.Warnf(buildFields(ctx, metadata), err, formatedMsg, args...)
+	current().Warnf(buildFields(ctx, metadata), err, formatedMsg, args...)
 }
 
 // Errorf prints log on error level like fmt.printf
 func Errorf(ctx context.Context, err error, metadata KV, formatedMsg string, args ...interface{}) {
-	rlogger.Errorf(buildFields(ctx, metadata), err, formatedMsg, args...)
+	current().Errorf(buildFields(ctx, metadata), err, formatedMsg, args...)
 }
 
 // Fatalf prints log on fatal level like fmt.printf
 func Fatalf(ctx context.Context, err error, metadata KV, formatedMsg string, args ...interface{}) {
-	rlogger.Fatalf(buildFields(ctx, metadata), err, formatedMsg, args...)
+	current().Fatalf(buildFields(ctx, metadata), err, formatedMsg, args...)
 }

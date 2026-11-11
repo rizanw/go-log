@@ -21,6 +21,10 @@ func New(config *logger.Config) (*Logger, error) {
 		err           error
 	)
 
+	if err = config.Validate(); err != nil {
+		return nil, err
+	}
+
 	// set zap config
 	configEncoder.MessageKey = "message"
 	configEncoder.LevelKey = "level"
@@ -84,7 +88,6 @@ func New(config *logger.Config) (*Logger, error) {
 		zapLogger = zapLogger.WithOptions(zap.AddStacktrace(setLevel(config.StackLevel)))
 	}
 
-	defer zapLogger.Sync()
 	return &Logger{
 		logger: zapLogger,
 		config: config,
@@ -120,13 +123,7 @@ func buildFields(cfg *logger.Config, field logger.Field, err error) []zap.Field 
 	}
 
 	if field.UserInfo != nil {
-		userInfo := field.UserInfo
-		if len(cfg.SensitiveFields) > 0 {
-			if ui, ok := userInfo.(map[string]interface{}); ok {
-				cfg.MaskSensitiveData(ui)
-				userInfo = ui
-			}
-		}
+		userInfo := cfg.Mask(field.UserInfo)
 		zapFields = append(zapFields, zap.Any(logger.FieldNameUserInfo, userInfo))
 	}
 
@@ -134,18 +131,12 @@ func buildFields(cfg *logger.Config, field logger.Field, err error) []zap.Field 
 		zapFields = append(zapFields, zap.Error(err))
 	}
 
-	if len(cfg.SensitiveFields) > 0 {
-		cfg.MaskSensitiveData(field.Fields)
-	}
-	for key, value := range field.Fields {
+	for key, value := range cfg.MaskSensitiveData(field.Fields) {
 		zapFields = append(zapFields, zap.Any(key, value))
 	}
 
 	if len(field.Metadata) > 0 {
-		metadata := field.Metadata
-		if len(cfg.SensitiveFields) > 0 {
-			cfg.MaskSensitiveData(metadata)
-		}
+		metadata := cfg.MaskSensitiveData(field.Metadata)
 		zapFields = append(zapFields, zap.Any(logger.FieldNameMetadata, metadata))
 	}
 
